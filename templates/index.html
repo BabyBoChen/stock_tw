@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>台股</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <style>
+        #canvasWrapper{
+            width:80%;
+            margin: auto;
+        }
+        @media only screen and (max-width: 720px){
+            #canvasWrapper{
+                width:100%;
+                margin: auto;
+            }
+        }        
+    </style>
+</head>
+
+<body>
+    <select name="company" id="selCompany" class="form-select">
+        <option value="">-</option>
+        {% for company in model %}
+        <option value="{{company.code}}">{{company.code}}-{{company.company_name}}</option>
+        {% endfor %}
+    </select>
+    <div id="canvasWrapper">
+        <canvas id="closing_price"></canvas>
+    </div>
+    <div id="tbWrapper" class="table-responsive">
+        <table id="tbTrans" class="table table-hover">
+            <tbody>
+                <tr>
+                    <td>請選擇一支投票</td>
+                </tr>
+            </tbody>            
+        </table>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        let daily_closing_price = [];
+        let labels = [];
+        let data = {
+                labels: labels,
+                datasets: [{
+                    label: '每日收盤價',
+                    backgroundColor: 'rgb(255, 99, 132)',
+                    borderColor: 'rgb(255, 99, 132)',
+                    data: [],
+                }],
+            };
+
+        let config = {
+                type: 'line',
+                data: data,
+                options: {}
+            };
+                
+        window.addEventListener("load", function (e) {
+            let myChart = new Chart(
+                    document.getElementById('closing_price').getContext("2d"),
+                    config);
+
+            /** @type {HTMLSelectElement} */
+            let selCompany = document.getElementById("selCompany");
+            selCompany.addEventListener("change", async function (e) {
+                /** @type {HTMLTableElement} */
+                let tbTrans = document.getElementById("tbTrans")
+                let code = selCompany.value;
+                let url = `history/${code}`;
+                let html = await fetch(url, {
+                    method: 'get',
+                }).then(function (res) {
+                    if (res.status == 404) {
+                        return "請選擇一支投票!";
+                    } else {
+                        return res.text();
+                    }
+                });
+                tbTrans.innerHTML = html;
+
+                let apiUrl = `api/history/${code}`;
+                let daily_price = await fetch(apiUrl, {
+                    method: 'get',
+                }).then(function (res) {
+                    return res.json();
+                });                
+
+                daily_closing_price = daily_price.data;
+                
+                myChart.destroy();
+                
+                data.labels = [];
+                data.datasets[0].data = [];
+                daily_closing_price.forEach(item => {
+                    data.labels.push(item.date);
+                    data.datasets[0].data.push(item.closing_price);
+                });
+                myChart = new Chart(
+                    document.getElementById('closing_price').getContext("2d"),
+                    config);
+                myChart.update();
+                console.log(config);        
+            });
+        });
+    </script>
+
+</body>
+
+</html>
