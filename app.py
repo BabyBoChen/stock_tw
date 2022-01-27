@@ -1,9 +1,13 @@
-from flask import Flask, render_template
-from flask_cors import CORS
+from flask import Flask, render_template, send_from_directory
 from db_context import *
+import os
 
 app = Flask(__name__)
-CORS(app)
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route("/")
 def index():
@@ -25,6 +29,8 @@ def api_history(code:str):
     for tran in trans:
         item = {}
         item["date"] = tran.date[5:]
+        if tran.closing_price is None:
+            continue
         item["closing_price"] = float(tran.closing_price)
         trans_list.append(item)
     json_data = {"data":trans_list}
