@@ -7,6 +7,7 @@ import requests
 import sqlite3
 import re
 from os import path
+from delete_older_than_90_days import *
 ROOT = path.dirname(path.realpath(__file__))
 
 def int_try_parse(s:str) -> Optional[int]:
@@ -100,8 +101,8 @@ def get_daily_stock_data(target_date:datetime.date, stock_type:int) -> Optional[
 
 def main() -> None:
 
-    start = datetime.date(2021,10,9)
-    end = datetime.date(2022,1,26)
+    start = datetime.date(2022,1,27)
+    end = datetime.date(2022,1,27)
     for_db = []
 
     while start <= end:
@@ -155,6 +156,8 @@ def main() -> None:
 
     con.commit()
     con.close()
+    delete_mi_index_older_than_90_days()
+
 
 if __name__ == '__main__':
     main()

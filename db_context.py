@@ -1,4 +1,3 @@
-import mysql.connector
 import sqlite3
 import datetime
 from os import path
