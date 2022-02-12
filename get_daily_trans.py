@@ -8,7 +8,9 @@ import sqlite3
 import re
 from os import path
 from delete_older_than_90_days import *
+import stock_tw_context
 ROOT = path.dirname(path.realpath(__file__))
+
 
 def int_try_parse(s:str) -> Optional[int]:
     res = None
@@ -102,7 +104,7 @@ def get_daily_stock_data(target_date:datetime.date, stock_type:int) -> Optional[
 def main() -> None:
 
     start = datetime.date(2022,1,27)
-    end = datetime.date(2022,1,27)
+    end = datetime.date(2022,2,13)
     for_db = []
 
     while start <= end:
@@ -110,10 +112,23 @@ def main() -> None:
         for_db.extend(get_daily_stock_data(start, 30))
         start = start + datetime.timedelta(days = 1)
 
+    conn = StockTWContext()
+    session = conn.session
+    companies = session.query(Company).all()
+    conn.close()
+
+    company_codes = []
+    for company in companies:
+        company_codes.append(company.code)
+    
+    companies = None
+
     con = sqlite3.connect(path.join(ROOT, "stock_tw.db"))
     cur = con.cursor()
 
-    for record in for_db:    
+    for record in for_db:
+        if record['Code'] not in company_codes:
+            continue
         cur.execute('''
             INSERT INTO MI_INDEX(
                 Id,
