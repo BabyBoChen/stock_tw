@@ -103,8 +103,8 @@ def get_daily_stock_data(target_date:datetime.date, stock_type:int) -> Optional[
 
 def main() -> None:
 
-    start = datetime.date(2023,6,26)
-    end = datetime.date(2023,7,28)
+    start = datetime.date(2024,6,1)
+    end = datetime.date(2024,8,31)
     for_db = []
 
     while start <= end:
